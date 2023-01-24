@@ -1,0 +1,8 @@
+(library
+ (public_name schemer)
+ (name schemer))
+
+(menhir
+ (modules parser))
+
+(ocamllex lexer)
