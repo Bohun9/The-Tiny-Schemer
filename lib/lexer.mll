@@ -16,18 +16,25 @@ rule read =
   | "false" { FALSE }
   | "<=" { LEQ }
   | ">=" { GEQ }
-  | "==" { DEQUALS }
+  | ":=" { SET }
+  | ";" { SEMICOLON }
   | "=" { EQUALS }
   | "*" { TIMES }
   | "+" { PLUS }
   | "-" { MINUS }
   | "(" { LPAREN }
   | ")" { RPAREN }
+  | "!" { BANG }
+  | "ref" { REF }
+  | "fun" { FUN }
+  | "let rec" { LETREC }
   | "let" { LET }
   | "in" { IN }
   | "if" { IF }
   | "then" { THEN }
   | "else" { ELSE }
+  | "call/cc" { CALCC }
+  | "throw" { THROW }
   | id { ID (Lexing.lexeme lexbuf) }
   | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | eof { EOF }
