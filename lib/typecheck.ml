@@ -106,7 +106,7 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let c = Constraint.unite c1 c2 in
     (match op with
      | Add | Sub | Mult -> TInt, Constraint.add (Constraint.add c t1 TInt) t2 TInt
-     | Leq | Geq -> TInt, Constraint.add (Constraint.add c t1 TInt) t2 TInt)
+     | Leq | Geq -> TBool, Constraint.add (Constraint.add c t1 TInt) t2 TInt)
   | Letrec (f, x, b, e) ->
     let ft = genvar () in
     let xt = genvar () in
@@ -149,4 +149,15 @@ let typeof (e : Ast.expr) : ttype =
   let t, c = infer e TypeContext.empty in
   let subst = Unification.unify c in
   Substitution.apply subst t
+;;
+
+let substitutionof (e : Ast.expr) : Substitution.t =
+  let _, c = infer e TypeContext.empty in
+  let subst = Unification.unify c in
+  subst
+;;
+
+let constraintsof (e : Ast.expr) : Constraint.t list =
+  let _, c = infer e TypeContext.empty in
+  c
 ;;

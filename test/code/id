@@ -1,0 +1,6 @@
+let id = fun x x
+in 
+if (id true) then
+	(id 0)
+else
+	(id 1)

@@ -1,5 +1,5 @@
 (tests
- (names test_types test_unification test_parser)
+ (names test_types test_unification test_parser test_typecheck)
  (libraries schemer ounit2)
- (deps code/fib)
+ (deps code/fib code/id)
  )

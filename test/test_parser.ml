@@ -26,11 +26,18 @@ let fib_ast =
     , App (Id "fib", Int 10) )
 ;;
 
+let id_ast =
+  Let
+    ( "id"
+    , Lam ("x", Id "x")
+    , If (App (Id "id", Bool true), App (Id "id", Int 0), App (Id "id", Int 1)) )
+;;
+
 let parser_suite =
   "parsing"
   >::: [ parse_make "1" "code/fib" fib_ast
-       ; parse_make "1" "code/fib" fib_ast
-       ; parse_make "1" "code/fib" fib_ast
+       ; parse_make "2" "code/id" id_ast
+       ; parse_make "3" "code/id" id_ast
        ]
 ;;
 
