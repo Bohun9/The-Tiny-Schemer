@@ -1,0 +1,3 @@
+call/cc k (
+	1 + (throw k 2)
+)

@@ -40,11 +40,14 @@ let mut_ast =
     , Begin (Set (Id "x", Binop (Add, Deref (Id "x"), Int 1)), Deref (Id "x")) )
 ;;
 
+let cont_ast = Callcc ("k", Binop (Add, Int 1, Throw (Id "k", Int 2)))
+
 let parser_suite =
   "parsing"
   >::: [ parse_make "1" "code/fib" fib_ast
        ; parse_make "2" "code/id" id_ast
        ; parse_make "3" "code/mutation" mut_ast
+       ; parse_make "4" "code/cont" cont_ast
        ]
 ;;
 

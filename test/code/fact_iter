@@ -1,0 +1,7 @@
+let res = ref 1 in (
+let i = ref 1 in (
+let k = call/cc k (throw k k) in (
+(res := (!res) * (!i));
+(i := (!i) + 1);
+if (!i) <= 10 then (throw k k) else !res
+)))

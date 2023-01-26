@@ -1,6 +1,7 @@
 open Ast
 
-exception IdentNotInScope
+exception IdentNotInScope of string
+exception LocalizationNotInStore
 
 module Environment : sig
   type 'a t
@@ -17,11 +18,9 @@ end = struct
   let query (env : 'a t) (x : string) =
     match List.assoc_opt x env with
     | Some v -> v
-    | None -> raise IdentNotInScope
+    | None -> raise (IdentNotInScope x)
   ;;
 end
-
-exception LocalizationNotInStore
 
 module Store : sig
   type 'a t
