@@ -11,13 +11,13 @@ let read_whole_file filename =
 let eval_make_dyn n f e =
   n
   >:: fun _ ->
-  assert_equal (Schemer.Eval.eval_dynamic (Schemer.Interp.parse (read_whole_file f))) e
+  assert_equal (Schemer.Interp.run_dynamic (read_whole_file f)) e
 ;;
 
 let eval_make_sta n f e =
   n
   >:: fun _ ->
-  assert_equal (Schemer.Eval.eval_static (Schemer.Interp.parse (read_whole_file f))) e
+  assert_equal (Schemer.Interp.run_static (read_whole_file f)) e
 ;;
 
 let fib_val = VInt 55

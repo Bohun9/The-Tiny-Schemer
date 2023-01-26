@@ -101,12 +101,6 @@ let rec eval
         | _ -> raise ContinuationTypeError))
 ;;
 
-let eval_dynamic (e : expr) =
+let evaluate (e : expr) : value = 
   let v, _ = eval e Environment.empty Store.empty (fun x -> x) in
   v
-;;
-
-let eval_static (e : expr) =
-  let _ = Typecheck.typeof e in
-  e |> eval_dynamic
-;;
