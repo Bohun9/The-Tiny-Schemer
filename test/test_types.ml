@@ -15,7 +15,7 @@ let ftv_suite =
 let () = run_test_tt_main ftv_suite
 
 let list_to_subst xs =
-  List.fold_left (fun s (x, t) -> Substitution.compose s x t) Substitution.empty xs
+  List.fold_left (fun s (x, t) -> s $$ (x >> t)) Substitution.empty xs
 ;;
 
 let subst_make n subst t1 t2 =

@@ -1,6 +1,8 @@
 open Types
 open Unification
 
+exception IndenNotInScope_TypeContext of string
+
 let genvar =
   let r = ref 0 in
   let g () =
@@ -14,44 +16,41 @@ module TypeContext : sig
   type t
 
   val empty : t
-  val extend : t -> string -> string list -> ttype -> t
+  val extend : t -> string -> tscheme -> t
   val apply : t -> Types.Substitution.t -> t
   val query : t -> string -> ttype
   val free_type_variables : t -> string list
-  val to_list : t -> (string * string list * ttype) list
+  val to_list : t -> (string * tscheme) list
 end = struct
-  type t = (string * string list * ttype) list
+  type t = (string * tscheme) list
 
   let empty = []
-  let extend cxt x pv t = (x, pv, t) :: cxt
-  let apply cxt subst = List.map (fun (x, pv, t) -> x, pv, Substitution.apply subst t) cxt
+  let extend cxt x ts = (x, ts) :: cxt
 
-  let rec query (ctx : t) (x : string) : ttype =
-    match ctx with
-    | [] -> failwith "variable not found in context"
-    | (y, pv, t) :: ctx ->
-      if x = y
-      then
-        Substitution.apply
-          (List.fold_left
-             (fun s x -> Substitution.compose s x (genvar ()))
-             Substitution.empty
-             pv)
-          t
-      else query ctx x
+  let apply cxt subst =
+    List.map (fun (x, Forall (pv, t)) -> x, Forall (pv, Substitution.apply subst t)) cxt
+  ;;
+
+  let query (ctx : t) (x : string) : ttype =
+    match List.assoc_opt x ctx with
+    | Some (Forall (pv, t)) ->
+      Substitution.apply
+        (List.fold_left (fun s x -> s $$ (x >> genvar ())) Substitution.empty pv)
+        t
+    | _ -> raise (IndenNotInScope_TypeContext x)
   ;;
 
   let free_type_variables (ctx : t) : string list =
     List.fold_left
-      (fun v (_, p, t) ->
+      (fun v (_, Forall (pv, t)) ->
         Utils.unite_lists
           v
-          (List.filter (fun x -> not (List.mem x p)) (free_type_variables t)))
+          (List.filter (fun x -> not (List.mem x pv)) (free_type_variables t)))
       []
       ctx
   ;;
 
-  let to_list (ctx : t) : (string * string list * ttype) list = ctx
+  let to_list (ctx : t) : (string * tscheme) list = ctx
 end
 
 let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constraint.t list
@@ -63,14 +62,13 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
   | Id x -> TypeContext.query ctx x, Constraint.empty
   | Lam (x, b) ->
     let at = genvar () in
-    let bt, c = infer b (TypeContext.extend ctx x [] at) in
+    let bt, c = infer b (TypeContext.extend ctx x (Forall ([], at))) in
     TFun (at, bt), c
   | App (f, a) ->
     let ft, c1 = infer f ctx in
     let at, c2 = infer a ctx in
     let rt = genvar () in
-    let c = Constraint.unite c1 c2 in
-    rt, Constraint.add c ft (TFun (at, rt))
+    rt, c1 ++ c2 ++ (ft == TFun (at, rt))
   | Let (x, e1, e2) ->
     let t1, c1 = infer e1 ctx in
     (match e1 with
@@ -82,67 +80,62 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
          TypeContext.extend
            ctx
            x
-           (Utils.difference_lists
-              (free_type_variables t1)
-              (TypeContext.free_type_variables ctx))
-           t1
+           (Forall
+              ( Utils.difference_lists
+                  (free_type_variables t1)
+                  (TypeContext.free_type_variables ctx)
+              , t1 ))
        in
        let t2, c2 = infer e2 ctx in
-       let c = Constraint.unite c1 c2 in
-       t2, c
+       t2, c1 ++ c2
      | _ ->
-       let t2, c2 = infer e2 (TypeContext.extend ctx x [] t1) in
-       let c = Constraint.unite c1 c2 in
-       t2, c)
+       let t2, c2 = infer e2 (TypeContext.extend ctx x (Forall ([], t1))) in
+       t2, c1 ++ c2)
   | If (e1, e2, e3) ->
     let t1, c1 = infer e1 ctx in
     let t2, c2 = infer e2 ctx in
     let t3, c3 = infer e3 ctx in
-    let c = Constraint.unite (Constraint.unite c1 c2) c3 in
-    t2, Constraint.add (Constraint.add c t1 TBool) t2 t3
+    t2, c1 ++ c2 ++ c3 ++ (t1 == TBool) ++ (t2 == t3)
   | Binop (op, e1, e2) ->
     let t1, c1 = infer e1 ctx in
     let t2, c2 = infer e2 ctx in
-    let c = Constraint.unite c1 c2 in
     (match op with
-     | Add | Sub | Mult -> TInt, Constraint.add (Constraint.add c t1 TInt) t2 TInt
-     | Leq | Geq -> TBool, Constraint.add (Constraint.add c t1 TInt) t2 TInt)
+     | Add | Sub | Mult -> TInt, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt)
+     | Leq | Geq -> TBool, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt))
   | Letrec (f, x, b, e) ->
     let ft = genvar () in
     let xt = genvar () in
-    let bctx = TypeContext.extend (TypeContext.extend ctx f [] ft) x [] xt in
-    let ectx = TypeContext.extend ctx f [] ft in
+    let bctx =
+      TypeContext.extend (TypeContext.extend ctx f (Forall ([], ft))) x (Forall ([], xt))
+    in
+    let ectx = TypeContext.extend ctx f (Forall ([], ft)) in
     let t1, c1 = infer b bctx in
     let t2, c2 = infer e ectx in
-    let c = Constraint.unite c1 c2 in
-    t2, Constraint.add c ft (TFun (xt, t1))
+    t2, c1 ++ c2 ++ (ft == TFun (xt, t1))
   | Ref x ->
     let t, c = infer x ctx in
     TRef t, c
   | Deref x ->
     let t, c = infer x ctx in
     let rt = genvar () in
-    rt, Constraint.add c t (TRef rt)
+    rt, c ++ (t == TRef rt)
   | Set (e1, e2) ->
     let t1, c1 = infer e1 ctx in
     let t2, c2 = infer e2 ctx in
-    let c = Constraint.unite c1 c2 in
-    TUnit, Constraint.add c t1 (TRef t2)
+    TUnit, c1 ++ c2 ++ (t1 == TRef t2)
   | Begin (e1, e2) ->
     let _, c1 = infer e1 ctx in
     let t2, c2 = infer e2 ctx in
-    let c = Constraint.unite c1 c2 in
-    t2, c
+    t2, c1 ++ c2
   | Callcc (k, b) ->
     let kt = genvar () in
-    let t, c = infer b (TypeContext.extend ctx k [] (TCont kt)) in
+    let t, c = infer b (TypeContext.extend ctx k (Forall ([], TCont kt))) in
     t, c
   | Throw (k, x) ->
     let kt, c1 = infer k ctx in
     let xt, c2 = infer x ctx in
-    let c = Constraint.unite c1 c2 in
     let rt = genvar () in
-    rt, Constraint.add c kt (TCont xt)
+    rt, c1 ++ c2 ++ (kt == TCont xt)
 ;;
 
 let typeof (e : Ast.expr) : ttype =

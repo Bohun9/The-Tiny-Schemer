@@ -3,7 +3,7 @@ open Schemer.Types
 open Schemer.Unification
 
 let list_to_constraints xs =
-  List.fold_left (fun c (t1, t2) -> Constraint.add c t1 t2) Constraint.empty xs
+  List.fold_left (fun c (t1, t2) -> c ++ (t1 == t2)) Constraint.empty xs
 ;;
 
 let uni_make_eq n constrs e =

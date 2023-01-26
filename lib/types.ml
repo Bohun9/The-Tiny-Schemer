@@ -7,7 +7,7 @@ type ttype =
   | TRef of ttype
   | TCont of ttype
 
-type ptype = Forall of string list * ttype
+type tscheme = Forall of string list * ttype
 
 let rec free_type_variables (t : ttype) : string list =
   match t with
@@ -25,7 +25,8 @@ module Substitution : sig
 
   val empty : t
   val apply : t -> ttype -> ttype
-  val compose : t -> string -> ttype -> t
+  val ( $$ ) : t -> t -> t
+  val ( >> ) : string -> ttype -> t
   val to_list : t -> (string * ttype) list
 end = struct
   type t = (string * ttype) list
@@ -52,6 +53,10 @@ end = struct
     applier t
   ;;
 
-  let compose (subst : t) (x : string) (t : ttype) = (x, apply subst t) :: subst
+  let ( $$ ) s1 s2 = List.fold_left (fun r (x, t) -> (x, apply s1 t) :: r) [] s2 @ s1
+  let ( >> ) x t = [ x, t ]
   let to_list (subst : t) = subst
 end
+
+let ( $$ ) = Substitution.( $$ )
+let ( >> ) = Substitution.( >> )

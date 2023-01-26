@@ -4,16 +4,17 @@ module Constraint : sig
   type t
 
   val empty : t list
-  val add : t list -> ttype -> ttype -> t list
+  val ( == ) : ttype -> ttype -> t list
+  val ( ++ ) : t list -> t list -> t list
   val apply : t list -> Substitution.t -> t list
-  val unite : t list -> t list -> t list
   val to_pair : t -> ttype * ttype
   val to_list : t list -> (ttype * ttype) list
 end = struct
   type t = ttype * ttype
 
   let empty = []
-  let add cs t1 t2 = (t1, t2) :: cs
+  let ( == ) (t1 : ttype) (t2 : ttype) = [ t1, t2 ]
+  let ( ++ ) (c1 : t list) (c2 : t list) = c2 @ c1
 
   let apply cs subst =
     List.fold_left
@@ -23,10 +24,12 @@ end = struct
       cs
   ;;
 
-  let unite c1 c2 = c1 @ c2
   let to_pair c = c
   let to_list c = c
 end
+
+let ( == ) = Constraint.( == )
+let ( ++ ) = Constraint.( ++ )
 
 exception Unification_failed
 
@@ -40,14 +43,11 @@ let rec unify (cs : Constraint.t list) : Substitution.t =
     else (
       match t1, t2 with
       | TVar x, t when List.mem x (free_type_variables t) = false ->
-        let subst = Substitution.compose Substitution.empty x t in
-        Substitution.compose (unify (Constraint.apply cs subst)) x t
+        unify (Constraint.apply cs (x >> t)) $$ (x >> t)
       | t, TVar x when List.mem x (free_type_variables t) = false ->
-        let subst = Substitution.compose Substitution.empty x t in
-        Substitution.compose (unify (Constraint.apply cs subst)) x t
-      | TFun (t11, t12), TFun (t21, t22) ->
-        unify (Constraint.add (Constraint.add cs t11 t21) t12 t22)
-      | TRef t1, TRef t2 -> unify (Constraint.add cs t1 t2)
-      | TCont t1, TCont t2 -> unify (Constraint.add cs t1 t2)
+        unify (Constraint.apply cs (x >> t)) $$ (x >> t)
+      | TFun (t11, t12), TFun (t21, t22) -> unify (cs ++ (t11 == t21) ++ (t12 == t22))
+      | TRef t1, TRef t2 -> unify (cs ++ (t1 == t2))
+      | TCont t1, TCont t2 -> unify (cs ++ (t1 == t2))
       | _ -> raise Unification_failed)
 ;;
