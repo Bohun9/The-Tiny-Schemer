@@ -7,13 +7,13 @@ module Environment : sig
   type 'a t
 
   val empty : 'a t
-  val extend : 'a t -> string -> 'a -> 'a t
+  val ( || ) : 'a t -> string * 'a -> 'a t
   val query : 'a t -> string -> 'a
 end = struct
   type 'a t = (string * 'a) list
 
   let empty = []
-  let extend (env : 'a t) (x : string) (v : 'a) : 'a t = (x, v) :: env
+  let ( || ) (env : 'a t) (b : string * 'a) : 'a t = b :: env
 
   let query (env : 'a t) (x : string) =
     match List.assoc_opt x env with
@@ -21,6 +21,8 @@ end = struct
     | None -> raise (IdentNotInScope x)
   ;;
 end
+
+let ( || ) = Environment.( || )
 
 module Store : sig
   type 'a t

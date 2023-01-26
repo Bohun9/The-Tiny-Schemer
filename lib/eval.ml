@@ -54,17 +54,13 @@ let rec eval
       eval e env sto (fun (v, sto) ->
         match f with
         | VClo (x, b, clo_env) ->
-          eval b (Environment.extend clo_env x v) sto (fun (v, sto) -> k (v, sto))
+          eval b (clo_env || (x, v)) sto (fun (v, sto) -> k (v, sto))
         | VCloRec (fn, x, b, clo_env) ->
-          eval
-            b
-            (Environment.extend (Environment.extend clo_env x v) fn f)
-            sto
-            (fun (v, sto) -> k (v, sto))
+          eval b ((clo_env || (x, v)) || (fn, f)) sto (fun (v, sto) -> k (v, sto))
         | _ -> raise FunctionApplicationTypeError))
   | Let (x, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
-      eval e2 (Environment.extend env x v1) sto (fun (v2, sto) -> k (v2, sto)))
+      eval e2 (env || (x, v1)) sto (fun (v2, sto) -> k (v2, sto)))
   | If (e1, e2, e3) ->
     eval e1 env sto (fun (v, sto) ->
       match v with
@@ -75,7 +71,7 @@ let rec eval
     eval e1 env sto (fun (v1, sto) ->
       eval e2 env sto (fun (v2, sto) -> k (evalbinop op v1 v2, sto)))
   | Letrec (f, x, b, e) ->
-    let env = Environment.extend env f (VCloRec (f, x, b, env)) in
+    let env = env || (f, VCloRec (f, x, b, env)) in
     eval e env sto (fun (v, sto) -> k (v, sto))
   | Ref e ->
     eval e env sto (fun (v, sto) ->
@@ -96,8 +92,7 @@ let rec eval
         | _ -> raise AssignmentTypeError))
   | Begin (e1, e2) ->
     eval e1 env sto (fun (_, sto) -> eval e2 env sto (fun (v2, sto) -> k (v2, sto)))
-  | Callcc (kn, e) ->
-    eval e (Environment.extend env kn (VCont k)) sto (fun (v, sto) -> k (v, sto))
+  | Callcc (kn, e) -> eval e (env || (kn, VCont k)) sto (fun (v, sto) -> k (v, sto))
   | Throw (k2, e) ->
     eval k2 env sto (fun (k2, sto) ->
       eval e env sto (fun (v, sto) ->

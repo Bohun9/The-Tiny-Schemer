@@ -16,7 +16,7 @@ module TypeContext : sig
   type t
 
   val empty : t
-  val extend : t -> string -> tscheme -> t
+  val ( || ) : t -> string * tscheme -> t
   val apply : t -> Types.Substitution.t -> t
   val query : t -> string -> ttype
   val free_type_variables : t -> string list
@@ -25,7 +25,7 @@ end = struct
   type t = (string * tscheme) list
 
   let empty = []
-  let extend cxt x ts = (x, ts) :: cxt
+  let ( || ) cxt b = b :: cxt
 
   let apply cxt subst =
     List.map (fun (x, Forall (pv, t)) -> x, Forall (pv, Substitution.apply subst t)) cxt
@@ -53,6 +53,17 @@ end = struct
   let to_list (ctx : t) : (string * tscheme) list = ctx
 end
 
+let ( || ) = TypeContext.( || )
+
+let generalize (ctx : TypeContext.t) (t : ttype) (c : Constraint.t list) : tscheme =
+  let subst = Unification.unify c in
+  let t = Substitution.apply subst t in
+  let ctx = TypeContext.apply ctx subst in
+  Forall
+    ( Utils.difference_lists (free_type_variables t) (TypeContext.free_type_variables ctx)
+    , t )
+;;
+
 let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constraint.t list
   =
   match e with
@@ -62,7 +73,7 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
   | Id x -> TypeContext.query ctx x, Constraint.empty
   | Lam (x, b) ->
     let at = genvar () in
-    let bt, c = infer b (TypeContext.extend ctx x (Forall ([], at))) in
+    let bt, c = infer b (ctx || (x, Forall ([], at))) in
     TFun (at, bt), c
   | App (f, a) ->
     let ft, c1 = infer f ctx in
@@ -73,23 +84,10 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let t1, c1 = infer e1 ctx in
     (match e1 with
      | Unit | Int _ | Bool _ | Id _ | Lam (_, _) ->
-       let subst = Unification.unify c1 in
-       let t1 = Substitution.apply subst t1 in
-       let ctx = TypeContext.apply ctx subst in
-       let ctx =
-         TypeContext.extend
-           ctx
-           x
-           (Forall
-              ( Utils.difference_lists
-                  (free_type_variables t1)
-                  (TypeContext.free_type_variables ctx)
-              , t1 ))
-       in
-       let t2, c2 = infer e2 ctx in
+       let t2, c2 = infer e2 (ctx || (x, generalize ctx t1 c1)) in
        t2, c1 ++ c2
      | _ ->
-       let t2, c2 = infer e2 (TypeContext.extend ctx x (Forall ([], t1))) in
+       let t2, c2 = infer e2 (ctx || (x, Forall ([], t1))) in
        t2, c1 ++ c2)
   | If (e1, e2, e3) ->
     let t1, c1 = infer e1 ctx in
@@ -105,12 +103,8 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
   | Letrec (f, x, b, e) ->
     let ft = genvar () in
     let xt = genvar () in
-    let bctx =
-      TypeContext.extend (TypeContext.extend ctx f (Forall ([], ft))) x (Forall ([], xt))
-    in
-    let ectx = TypeContext.extend ctx f (Forall ([], ft)) in
-    let t1, c1 = infer b bctx in
-    let t2, c2 = infer e ectx in
+    let t1, c1 = infer b ((ctx || (f, Forall ([], ft))) || (x, Forall ([], xt))) in
+    let t2, c2 = infer e (ctx || (f, Forall ([], ft))) in
     t2, c1 ++ c2 ++ (ft == TFun (xt, t1))
   | Ref x ->
     let t, c = infer x ctx in
@@ -129,7 +123,7 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     t2, c1 ++ c2
   | Callcc (k, b) ->
     let kt = genvar () in
-    let t, c = infer b (TypeContext.extend ctx k (Forall ([], TCont kt))) in
+    let t, c = infer b (ctx || (k, Forall ([], TCont kt))) in
     t, c
   | Throw (k, x) ->
     let kt, c1 = infer k ctx in
