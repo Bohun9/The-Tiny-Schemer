@@ -1,0 +1,9 @@
+let f = ref (fun x x) in (
+let fact = (fun n 
+	if n <= 1 then
+		1
+	else
+		n * ((!f) (n - 1)))
+in
+(f := fact);
+(fact 10))

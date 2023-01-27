@@ -25,6 +25,7 @@ let id_val = VInt 0
 let mut_val = VInt 1
 let cont_val = VInt 2
 let fact_iter_val = VInt 3628800
+let fact_knot_val = VInt 3628800
 
 let eval_suite =
   "evaluation"
@@ -37,6 +38,8 @@ let eval_suite =
        ; eval_make_dyn "7" "code/cont" cont_val
        ; eval_make_sta "8" "code/cont" cont_val
        ; eval_make_dyn "9" "code/fact_iter" fact_iter_val
+       ; eval_make_dyn "9" "code/fact_knot" fact_knot_val
+       ; eval_make_sta "10" "code/fact_knot" fact_knot_val
        ]
 ;;
 
