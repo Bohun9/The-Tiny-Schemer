@@ -9,15 +9,11 @@ let read_whole_file filename =
 ;;
 
 let eval_make_dyn n f e =
-  n
-  >:: fun _ ->
-  assert_equal (Schemer.Interp.run_dynamic (read_whole_file f)) e
+  n >:: fun _ -> assert_equal (Schemer.Interp.run_dynamic (read_whole_file f)) e
 ;;
 
 let eval_make_sta n f e =
-  n
-  >:: fun _ ->
-  assert_equal (Schemer.Interp.run_static (read_whole_file f)) e
+  n >:: fun _ -> assert_equal (Schemer.Interp.run_static (read_whole_file f)) e
 ;;
 
 let fib_val = VInt 55
@@ -26,6 +22,8 @@ let mut_val = VInt 1
 let cont_val = VInt 2
 let fact_iter_val = VInt 3628800
 let fact_knot_val = VInt 3628800
+let pair_val = VInt 3
+let list_val = VInt 3
 
 let eval_suite =
   "evaluation"
@@ -40,6 +38,9 @@ let eval_suite =
        ; eval_make_dyn "9" "code/fact_iter" fact_iter_val
        ; eval_make_dyn "9" "code/fact_knot" fact_knot_val
        ; eval_make_sta "10" "code/fact_knot" fact_knot_val
+       ; eval_make_sta "11" "code/pair" pair_val
+       ; eval_make_dyn "12" "code/list" list_val
+       ; eval_make_sta "13" "code/list" list_val
        ]
 ;;
 

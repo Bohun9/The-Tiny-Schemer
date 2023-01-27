@@ -25,6 +25,16 @@ rule read =
   | "(" { LPAREN }
   | ")" { RPAREN }
   | "!" { BANG }
+  | "<" { ANGLELEFT }
+  | ">" { ANGLERIGHT }
+  | "," { COMMA }
+  | "empty?" { EMPTY }
+  | "[]" { NIL }
+  | "cons" { CONS }
+  | "car" { CAR }
+  | "cdr" { CDR }
+  | "fst" { FIRST }
+  | "snd" { SECOND }
   | "ref" { REF }
   | "fun" { FUN }
   | "let rec" { LETREC }

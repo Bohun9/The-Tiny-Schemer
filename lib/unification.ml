@@ -47,7 +47,9 @@ let rec unify (cs : Constraint.t list) : Substitution.t =
       | t, TVar x when List.mem x (free_type_variables t) = false ->
         unify (Constraint.apply cs (x >> t)) $$ (x >> t)
       | TFun (t11, t12), TFun (t21, t22) -> unify (cs ++ (t11 == t21) ++ (t12 == t22))
+      | TPair (t11, t12), TPair (t21, t22) -> unify (cs ++ (t11 == t21) ++ (t12 == t22))
       | TRef t1, TRef t2 -> unify (cs ++ (t1 == t2))
       | TCont t1, TCont t2 -> unify (cs ++ (t1 == t2))
+      | TList t1, TList t2 -> unify (cs ++ (t1 == t2))
       | _ -> raise Unification_failed)
 ;;

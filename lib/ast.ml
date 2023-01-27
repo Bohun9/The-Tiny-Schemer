@@ -15,9 +15,18 @@ type expr =
   | Lam of string * expr
   | App of expr * expr
   (* Standard *)
+  | Pair of expr * expr
+  | First of expr
+  | Second of expr
   | Let of string * expr * expr
   | If of expr * expr * expr
   | Binop of binop * expr * expr
+  (* Lists *)
+  | Nil
+  | Empty of expr
+  | Car of expr
+  | Cdr of expr
+  | Cons of expr * expr
   (* Recursion *)
   | Letrec of string * string * expr * expr
   (* Mutable records *)

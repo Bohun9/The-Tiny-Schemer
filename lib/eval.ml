@@ -11,6 +11,15 @@ exception DereferenceTypeError
 exception AssignmentTypeError
 exception ContinuationTypeError
 exception FunctionApplicationTypeError
+exception PairFirstTypeError
+exception PairSecondTypeError
+exception EmptyTypeError
+exception CarTypeError
+exception CdrTypeError
+exception ConsError
+exception ConsTypeError
+exception CarEmptyError
+exception CdrEmptyError
 
 let evalbinop (op : binop) (v1 : value) (v2 : value) =
   match op with
@@ -58,6 +67,19 @@ let rec eval
         | VCloRec (fn, x, b, clo_env) ->
           eval b ((clo_env || (x, v)) || (fn, f)) sto (fun (v, sto) -> k (v, sto))
         | _ -> raise FunctionApplicationTypeError))
+  | Pair (e1, e2) ->
+    eval e1 env sto (fun (v1, sto) ->
+      eval e2 env sto (fun (v2, sto) -> k (VPair (v1, v2), sto)))
+  | First e ->
+    eval e env sto (fun (v, sto) ->
+      match v with
+      | VPair (v1, _) -> k (v1, sto)
+      | _ -> raise PairFirstTypeError)
+  | Second e ->
+    eval e env sto (fun (v, sto) ->
+      match v with
+      | VPair (_, v2) -> k (v2, sto)
+      | _ -> raise PairSecondTypeError)
   | Let (x, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
       eval e2 (env || (x, v1)) sto (fun (v2, sto) -> k (v2, sto)))
@@ -70,6 +92,31 @@ let rec eval
   | Binop (op, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
       eval e2 env sto (fun (v2, sto) -> k (evalbinop op v1 v2, sto)))
+  | Nil -> k (VNil, sto)
+  | Empty e ->
+    eval e env sto (fun (v, sto) ->
+      match v with
+      | VNil -> k (VBool true, sto)
+      | VCons (_, _) -> k (VBool false, sto)
+      | _ -> raise EmptyTypeError)
+  | Car e ->
+    eval e env sto (fun (v, sto) ->
+      match v with
+      | VNil -> raise CarEmptyError
+      | VCons (h, _) -> k (h, sto)
+      | _ -> raise CarTypeError)
+  | Cdr e ->
+    eval e env sto (fun (v, sto) ->
+      match v with
+      | VNil -> raise CdrEmptyError
+      | VCons (_, t) -> k (t, sto)
+      | _ -> raise CdrTypeError)
+  | Cons (e1, e2) ->
+    eval e1 env sto (fun (v1, sto) ->
+      eval e2 env sto (fun (v2, sto) ->
+        match v2 with
+        | VNil | VCons (_, _) -> k (VCons (v1, v2), sto)
+        | _ -> raise ConsTypeError))
   | Letrec (f, x, b, e) ->
     let env = env || (f, VCloRec (f, x, b, env)) in
     eval e env sto (fun (v, sto) -> k (v, sto))
@@ -101,6 +148,7 @@ let rec eval
         | _ -> raise ContinuationTypeError))
 ;;
 
-let evaluate (e : expr) : value = 
+let evaluate (e : expr) : value =
   let v, _ = eval e Environment.empty Store.empty (fun x -> x) in
   v
+;;

@@ -80,6 +80,20 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let at, c2 = infer a ctx in
     let rt = genvar () in
     rt, c1 ++ c2 ++ (ft == TFun (at, rt))
+  | Pair (e1, e2) ->
+    let t1, c1 = infer e1 ctx in
+    let t2, c2 = infer e2 ctx in
+    TPair (t1, t2), c1 ++ c2
+  | First e ->
+    let t, c = infer e ctx in
+    let t1 = genvar () in
+    let t2 = genvar () in
+    t1, c ++ (t == TPair (t1, t2))
+  | Second e ->
+    let t, c = infer e ctx in
+    let t1 = genvar () in
+    let t2 = genvar () in
+    t2, c ++ (t == TPair (t1, t2))
   | Let (x, e1, e2) ->
     let t1, c1 = infer e1 ctx in
     (match e1 with
@@ -100,6 +114,25 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     (match op with
      | Add | Sub | Mult -> TInt, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt)
      | Leq | Geq -> TBool, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt))
+  | Nil ->
+    let t = genvar () in
+    TList t, Constraint.empty
+  | Empty e ->
+    let t, c = infer e ctx in
+    let te = genvar () in
+    TBool, c ++ (TList te == t)
+  | Car e ->
+    let t, c = infer e ctx in
+    let te = genvar () in
+    te, c ++ (TList te == t)
+  | Cdr e ->
+    let t, c = infer e ctx in
+    let te = genvar () in
+    t, c ++ (TList te == t)
+  | Cons (e1, e2) ->
+    let t1, c1 = infer e1 ctx in
+    let t2, c2 = infer e2 ctx in
+    t2, c1 ++ c2 ++ (t2 == TList t1)
   | Letrec (f, x, b, e) ->
     let ft = genvar () in
     let xt = genvar () in

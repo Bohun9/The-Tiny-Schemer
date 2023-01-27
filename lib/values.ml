@@ -54,6 +54,9 @@ type value =
   | VInt of int
   | VBool of bool
   | VUnit
+  | VPair of value * value
+  | VNil
+  | VCons of value * value
   | VLoc of int
   | VClo of string * expr * value Environment.t
   | VCont of (result -> result)
