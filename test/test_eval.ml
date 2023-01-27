@@ -26,6 +26,7 @@ let pair_val = VInt 3
 let list_val = VInt 3
 let error_val = VError
 let pytha_val = VPair (VInt 4, VPair (VInt 3, VInt 5))
+let exn_val = VPair (VInt 0, VInt 1)
 
 let eval_suite =
   "evaluation"
@@ -45,6 +46,7 @@ let eval_suite =
        ; eval_make_sta "13" "code/list" list_val
        ; eval_make_sta "14" "code/error" error_val
        ; eval_make_dyn "15" "code/pythagorean" pytha_val
+       ; eval_make_dyn "16" "code/exception" exn_val
        ]
 ;;
 

@@ -4,6 +4,7 @@ type binop =
   | Mult
   | Leq
   | Geq
+  | Eq
 
 type expr =
   (* Atomic *)

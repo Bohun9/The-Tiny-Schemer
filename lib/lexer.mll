@@ -18,6 +18,7 @@ rule read =
   | ">=" { GEQ }
   | ":=" { SET }
   | ";" { SEMICOLON }
+  | "==" { DOUBLEEQUALS }
   | "=" { EQUALS }
   | "*" { TIMES }
   | "+" { PLUS }

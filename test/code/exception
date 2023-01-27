@@ -1,0 +1,47 @@
+let stack = ref [] in
+
+let threw = fun x (
+	if (empty? (!stack)) then
+		error
+	else (
+		let k = (car (!stack)) in (
+			(throw k x)
+		)
+	)
+) in
+
+let try = fun expr ( fun exn ( fun handler (
+	let k = (call/cc k k) in
+	if (cont? k) then (
+		(stack := (cons k (!stack)));
+		(
+		 let v = (expr ()) in
+		 (
+		  (stack := (cdr (!stack)));
+		  v
+		 )
+		)
+	) else (
+		(stack := (cdr (!stack)));
+		(
+		 if (k == exn) then (
+		 	handler ()
+		 ) else (
+		 	threw k
+		 )
+		)
+	)
+))) in
+
+let test = fun exn (
+	((try
+	(
+	 fun x (
+		 1 + 
+		 (((try (fun x (threw exn))) 1) (fun x 0))
+	 )))
+	0)
+	(fun x 0)
+) in
+
+<test 0, test 1>

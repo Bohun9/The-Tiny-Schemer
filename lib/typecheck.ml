@@ -70,9 +70,9 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
   | Unit -> TUnit, Constraint.empty
   | Int _ -> TInt, Constraint.empty
   | Bool _ -> TBool, Constraint.empty
-  | Error -> 
-      let t = genvar () in
-      t, Constraint.empty
+  | Error ->
+    let t = genvar () in
+    t, Constraint.empty
   | Id x -> TypeContext.query ctx x, Constraint.empty
   | Lam (x, b) ->
     let at = genvar () in
@@ -116,7 +116,7 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let t2, c2 = infer e2 ctx in
     (match op with
      | Add | Sub | Mult -> TInt, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt)
-     | Leq | Geq -> TBool, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt))
+     | Leq | Geq | Eq -> TBool, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt))
   | Nil ->
     let t = genvar () in
     TList t, Constraint.empty

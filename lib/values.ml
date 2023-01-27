@@ -65,17 +65,17 @@ type value =
 
 and result = value * value Store.t
 
-let rec to_string (v : value) : string = 
+let rec to_string (v : value) : string =
   match v with
   | VInt n -> "Int " ^ string_of_int n
   | VBool b -> "Bool " ^ Bool.to_string b
   | VUnit -> "Unit"
   | VError -> "Error"
-  | VPair (v1, v2) -> "<" ^ (to_string v1) ^ "," ^ (to_string v2) ^ ">"
+  | VPair (v1, v2) -> "<" ^ to_string v1 ^ "," ^ to_string v2 ^ ">"
   | VNil -> "Nil"
-  | VCons (v1, v2) -> "Cons(" ^ (to_string v1) ^ "," ^ (to_string v2) ^ ")"
+  | VCons (v1, v2) -> "Cons(" ^ to_string v1 ^ "," ^ to_string v2 ^ ")"
   | VLoc loc -> "Loc " ^ string_of_int loc
   | VClo _ -> "Clo"
   | VCont _ -> "Cont"
-  | VCloRec _-> "CloRec"
-
+  | VCloRec _ -> "CloRec"
+;;
