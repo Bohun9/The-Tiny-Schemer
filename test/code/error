@@ -1,0 +1,4 @@
+if true then
+	error
+else
+	2

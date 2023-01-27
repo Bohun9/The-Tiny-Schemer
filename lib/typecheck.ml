@@ -70,6 +70,9 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
   | Unit -> TUnit, Constraint.empty
   | Int _ -> TInt, Constraint.empty
   | Bool _ -> TBool, Constraint.empty
+  | Error -> 
+      let t = genvar () in
+      t, Constraint.empty
   | Id x -> TypeContext.query ctx x, Constraint.empty
   | Lam (x, b) ->
     let at = genvar () in
@@ -163,6 +166,9 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let xt, c2 = infer x ctx in
     let rt = genvar () in
     rt, c1 ++ c2 ++ (kt == TCont xt)
+  | IsCont e ->
+    let _, c = infer e ctx in
+    TBool, c
 ;;
 
 let typeof (e : Ast.expr) : ttype =

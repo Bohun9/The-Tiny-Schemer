@@ -10,6 +10,7 @@ type expr =
   | Unit
   | Int of int
   | Bool of bool
+  | Error
   (* Lambda calculus *)
   | Id of string
   | Lam of string * expr
@@ -37,3 +38,4 @@ type expr =
   (* Continuations *)
   | Callcc of string * expr
   | Throw of expr * expr
+  | IsCont of expr

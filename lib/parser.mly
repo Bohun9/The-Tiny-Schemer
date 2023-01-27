@@ -39,6 +39,8 @@ open Ast
 %token CONS
 %token CAR
 %token CDR
+%token ERROR
+%token ISCONT
 
 %nonassoc IN
 %nonassoc ELSE
@@ -86,4 +88,6 @@ expr:
     | ANGLELEFT; e1 = expr; COMMA; e2 = expr; ANGLERIGHT { Pair (e1, e2) }
     | FIRST; e = expr { First e }
     | SECOND; e = expr { Second e }
+    | ERROR; { Error }
+    | ISCONT; e = expr { IsCont (e) }
     ;

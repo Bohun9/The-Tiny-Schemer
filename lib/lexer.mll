@@ -29,6 +29,7 @@ rule read =
   | ">" { ANGLERIGHT }
   | "," { COMMA }
   | "empty?" { EMPTY }
+  | "cont?" { ISCONT }
   | "[]" { NIL }
   | "cons" { CONS }
   | "car" { CAR }
@@ -45,6 +46,7 @@ rule read =
   | "else" { ELSE }
   | "call/cc" { CALCC }
   | "throw" { THROW }
+  | "error" { ERROR }
   | id { ID (Lexing.lexeme lexbuf) }
   | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | eof { EOF }

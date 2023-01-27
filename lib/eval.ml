@@ -56,7 +56,10 @@ let rec eval
   | Int x -> k (VInt x, sto)
   | Bool x -> k (VBool x, sto)
   | Unit -> k (VUnit, sto)
-  | Id x -> k (Environment.query env x, sto)
+  | Error -> VError, sto
+  | Id x -> 
+      (* (let _ = Printf.printf "%s %s\n" x (to_string (Environment.query env x)) in ()); *)
+      k (Environment.query env x, sto)
   | Lam (x, b) -> k (VClo (x, b, env), sto)
   | App (f, e) ->
     eval f env sto (fun (f, sto) ->
@@ -87,7 +90,9 @@ let rec eval
     eval e1 env sto (fun (v, sto) ->
       match v with
       | VBool true -> eval e2 env sto (fun (v, sto) -> k (v, sto))
-      | VBool false -> eval e3 env sto (fun (v, sto) -> k (v, sto))
+      | VBool false -> eval e3 env sto (fun (v, sto) -> 
+          (* (let _ = Printf.printf "IF FALSE: %s\n" (to_string v) in ()); *)
+          k (v, sto))
       | _ -> raise IfGuardTypeError)
   | Binop (op, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
@@ -146,6 +151,12 @@ let rec eval
         match k2 with
         | VCont k2 -> k2 (v, sto)
         | _ -> raise ContinuationTypeError))
+  | IsCont e ->
+    eval e env sto (fun (v, sto) ->
+      match v with
+      | VCont _ -> k (VBool true, sto)
+      | _ -> k (VBool false, sto)
+    )
 ;;
 
 let evaluate (e : expr) : value =

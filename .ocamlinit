@@ -20,3 +20,9 @@ let get_type f =
 let get_subst f =
   Substitution.to_list (substitutionof (parse (read_whole_file f)))
 
+let get_value f = 
+  Interp.run_dynamic (read_whole_file f)
+
+let get_ast f = 
+  Interp.parse (read_whole_file f)
+

@@ -2,6 +2,7 @@ type ttype =
   | TInt
   | TBool
   | TUnit
+  | TError
   | TVar of string
   | TList of ttype
   | TPair of ttype * ttype
@@ -16,6 +17,7 @@ let rec free_type_variables (t : ttype) : string list =
   | TInt -> []
   | TBool -> []
   | TUnit -> []
+  | TError -> []
   | TVar x -> [ x ]
   | TList t -> free_type_variables t
   | TPair (t1, t2) -> Utils.unite_lists (free_type_variables t1) (free_type_variables t2)
@@ -49,6 +51,7 @@ end = struct
       | TInt -> TInt
       | TBool -> TBool
       | TUnit -> TUnit
+      | TError -> TError
       | TVar x -> query subst x
       | TList t -> TList (applier t)
       | TPair (t1, t2) -> TPair (applier t1, applier t2)
