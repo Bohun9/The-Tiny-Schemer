@@ -1,0 +1,8 @@
+let ycomb = fun f (
+	(fun x (
+		f (fun y ((x x) y))
+	))
+	(fun x (
+		f (fun y ((x x) y))
+	))
+) in ycomb

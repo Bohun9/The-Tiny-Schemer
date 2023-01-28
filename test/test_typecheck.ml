@@ -44,7 +44,7 @@ let check_isomorphism t1 t2 =
   !res
 ;;
 
-let parse_make n f e =
+let type_make n f e =
   n
   >:: fun _ ->
   assert_bool
@@ -52,6 +52,13 @@ let parse_make n f e =
     (check_isomorphism
        (Schemer.Typecheck.typeof (Schemer.Interp.parse (read_whole_file f)))
        e)
+;;
+
+let type_make_ex n f =
+  n
+  >:: fun _ ->
+  assert_raises Schemer.Unification.Unification_failed (fun _ ->
+    Schemer.Typecheck.typeof (Schemer.Interp.parse (read_whole_file f)))
 ;;
 
 let fib_type = TInt
@@ -65,9 +72,10 @@ let typeinfer_type =
 
 let type_suite =
   "type inference"
-  >::: [ parse_make "1" "code/fib" fib_type
-       ; parse_make "2" "code/id" id_type
-       ; parse_make "3" "code/typeinfer" typeinfer_type
+  >::: [ type_make "1" "code/fib" fib_type
+       ; type_make "2" "code/id" id_type
+       ; type_make "3" "code/typeinfer" typeinfer_type
+       ; type_make_ex "4" "code/ycomb"
        ]
 ;;
 
