@@ -1,0 +1,11 @@
+let rec length list (
+	if (empty? list) then
+		0
+	else
+		1 + (length (cdr list))
+) in
+
+(
+ (length (cons 1 (cons 2 (cons 3 [])))) +
+ (length (cons () (cons () (cons () []))))
+)

@@ -70,12 +70,15 @@ let typeinfer_type =
     , TFun (TFun (TVar "x", TVar "y"), TFun (TVar "x", TVar "z")) )
 ;;
 
+let list_length_type = TFun (TList (TVar "x"), TInt)
+
 let type_suite =
   "type inference"
   >::: [ type_make "1" "code/fib" fib_type
        ; type_make "2" "code/id" id_type
        ; type_make "3" "code/typeinfer" typeinfer_type
        ; type_make_ex "4" "code/ycomb"
+       ; type_make "5" "code/list_length" list_length_type
        ]
 ;;
 
