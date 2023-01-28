@@ -7,7 +7,11 @@ exception SubTypeError
 exception MultTypeError
 exception LeqTypeError
 exception GeqTypeError
+exception OrTypeError
+exception AndTypeError
+exception XorTypeError
 exception EqTypeError
+exception NotTypeError
 exception DereferenceTypeError
 exception AssignmentTypeError
 exception ContinuationTypeError
@@ -22,7 +26,7 @@ exception ConsTypeError
 exception CarEmptyError
 exception CdrEmptyError
 
-let evalbinop (op : binop) (v1 : value) (v2 : value) =
+let evalbinop (op : binop) (v1 : value) (v2 : value) : value =
   match op with
   | Add ->
     (match v1, v2 with
@@ -48,7 +52,27 @@ let evalbinop (op : binop) (v1 : value) (v2 : value) =
     (match v1, v2 with
      | VInt i1, VInt i2 -> VBool (i1 == i2)
      | _ -> raise EqTypeError)
+  | Or ->
+    (match v1, v2 with
+     | VBool i1, VBool i2 -> VBool (i1 || i2)
+     | _ -> raise OrTypeError)
+  | And ->
+    (match v1, v2 with
+     | VBool i1, VBool i2 -> VBool (i1 && i2)
+     | _ -> raise AndTypeError)
+  | Xor ->
+    (match v1, v2 with
+     | VInt i1, VInt i2 -> VInt (i1 lxor i2)
+     | _ -> raise XorTypeError)
 ;;
+
+let evalunop (op : unop) (v : value) : value = 
+  match op with
+  | Not ->
+      (match v with
+      | VBool true -> VBool false
+      | VBool false -> VBool true
+      | _ -> raise NotTypeError)
 
 let rec eval
   (e : expr)
@@ -75,9 +99,9 @@ let rec eval
         (*  ()); *)
         match f with
         | VClo (x, b, clo_env) ->
-          eval b (clo_env || (x, v)) sto (fun (v, sto) -> k (v, sto))
+          eval b (clo_env ^^ (x, v)) sto (fun (v, sto) -> k (v, sto))
         | VCloRec (fn, x, b, clo_env) ->
-          eval b ((clo_env || (x, v)) || (fn, f)) sto (fun (v, sto) -> k (v, sto))
+          eval b ((clo_env ^^ (x, v)) ^^ (fn, f)) sto (fun (v, sto) -> k (v, sto))
         | _ -> raise FunctionApplicationTypeError))
   | Pair (e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
@@ -94,7 +118,7 @@ let rec eval
       | _ -> raise PairSecondTypeError)
   | Let (x, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
-      eval e2 (env || (x, v1)) sto (fun (v2, sto) -> k (v2, sto)))
+      eval e2 (env ^^ (x, v1)) sto (fun (v2, sto) -> k (v2, sto)))
   | If (e1, e2, e3) ->
     eval e1 env sto (fun (v, sto) ->
       match v with
@@ -107,6 +131,10 @@ let rec eval
   | Binop (op, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
       eval e2 env sto (fun (v2, sto) -> k (evalbinop op v1 v2, sto)))
+  | Unop (op, e) ->
+      eval e env sto (fun (v, sto) ->
+        k (evalunop op v, sto)
+      )
   | Nil -> k (VNil, sto)
   | Empty e ->
     eval e env sto (fun (v, sto) ->
@@ -133,7 +161,7 @@ let rec eval
         | VNil | VCons (_, _) -> k (VCons (v1, v2), sto)
         | _ -> raise ConsTypeError))
   | Letrec (f, x, b, e) ->
-    let env = env || (f, VCloRec (f, x, b, env)) in
+    let env = env ^^ (f, VCloRec (f, x, b, env)) in
     eval e env sto (fun (v, sto) -> k (v, sto))
   | Ref e ->
     eval e env sto (fun (v, sto) ->
@@ -154,7 +182,7 @@ let rec eval
         | _ -> raise AssignmentTypeError))
   | Begin (e1, e2) ->
     eval e1 env sto (fun (_, sto) -> eval e2 env sto (fun (v2, sto) -> k (v2, sto)))
-  | Callcc (kn, e) -> eval e (env || (kn, VCont k)) sto (fun (v, sto) -> k (v, sto))
+  | Callcc (kn, e) -> eval e (env ^^ (kn, VCont k)) sto (fun (v, sto) -> k (v, sto))
   | Throw (k2, e) ->
     eval k2 env sto (fun (k2, sto) ->
       eval e env sto (fun (v, sto) ->

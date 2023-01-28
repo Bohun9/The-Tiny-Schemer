@@ -29,6 +29,29 @@ let pytha_val = VPair (VInt 4, VPair (VInt 3, VInt 5))
 let exn_val = VPair (VInt 0, VInt 1)
 let poly_list_length_val = VInt 6
 
+let coroutines_val =
+  VCons
+    ( VInt 0
+    , VCons
+        ( VInt 1
+        , VCons
+            ( VInt 2
+            , VCons
+                ( VInt 3
+                , VCons
+                    ( VInt 0
+                    , VCons
+                        ( VInt 1
+                        , VCons
+                            ( VInt 2
+                            , VCons
+                                ( VInt 3
+                                , VCons
+                                    ( VInt 0
+                                    , VCons (VInt 1, VCons (VInt 2, VCons (VInt 3, VNil)))
+                                    ) ) ) ) ) ) ) ) )
+;;
+
 let eval_suite =
   "evaluation"
   >::: [ eval_make_dyn "1" "code/fib" fib_val
@@ -49,6 +72,7 @@ let eval_suite =
        ; eval_make_dyn "15" "code/pythagorean" pytha_val
        ; eval_make_dyn "16" "code/exception" exn_val
        ; eval_make_sta "17" "code/poly_list_length" poly_list_length_val
+       ; eval_make_dyn "18" "code/coroutines" coroutines_val
        ]
 ;;
 

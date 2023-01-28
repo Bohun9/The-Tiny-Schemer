@@ -5,6 +5,12 @@ type binop =
   | Leq
   | Geq
   | Eq
+  | Or
+  | And
+  | Xor
+
+type unop = 
+  | Not
 
 type expr =
   (* Atomic *)
@@ -23,6 +29,7 @@ type expr =
   | Let of string * expr * expr
   | If of expr * expr * expr
   | Binop of binop * expr * expr
+  | Unop of unop * expr
   (* Lists *)
   | Nil
   | Empty of expr

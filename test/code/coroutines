@@ -1,0 +1,85 @@
+let queue = ref [] in
+let res = ref [] in
+let halt = ref () in (
+
+let rec append xs (fun x (
+	if (empty? xs) then (
+		(cons x [])
+	) else (
+		cons (car xs) ((append (cdr xs)) x)
+	)
+)) in
+
+let yield = fun x (
+	let k = (call/cc k k) in (
+	if ((empty? (!queue)) || (not (cont? k))) then (
+		()
+	) else (
+		let t = (car (!queue)) in (
+		 (queue := (cdr (!queue)));
+		 (queue := ((append (!queue)) k));
+		 (throw t ())
+		)
+	))
+) in
+
+let quit = fun x (
+	if (empty? (!queue)) then (
+		(throw (!halt) ())
+	) else (
+		let k = (car (!queue)) in
+		(
+		 (queue := (cdr (!queue)));
+		 (throw k ())
+		)
+	)
+) in
+
+let run = fun x (
+	let k = (call/cc k k) in
+	if (cont? k) then (
+		let t = (car (!queue)) in
+		(
+		 (halt := k);
+		 (queue := (cdr (!queue)));
+		 (throw t ())
+		)
+	) else (
+		!res
+	)
+) in
+
+let spawn = fun thunk (
+	let k = (call/cc k k) in
+	if (cont? k) then (
+		queue := ((append (!queue)) k)
+	) else (
+		thunk ()
+	)
+) in
+
+let counter = ref 12 in
+
+let makethread = fun id (
+	let rec spin x (
+		if ((!counter) <= 0) then (
+			quit ()
+		) else (
+			(counter := ((!counter) - 1));
+			(res := ((append (!res)) id));
+			(yield ());
+			(spin ())
+		)
+	) in
+	spin
+) in
+
+(
+ (spawn (makethread 0));
+ (spawn (makethread 1));
+ (spawn (makethread 2));
+ (spawn (makethread 3));
+ (run ())
+)
+	
+)

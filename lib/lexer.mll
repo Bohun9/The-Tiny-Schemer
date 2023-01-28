@@ -14,6 +14,7 @@ rule read =
   | "()" { UNIT }
   | "true" { TRUE }
   | "false" { FALSE }
+  | "not" { NOT }
   | "<=" { LEQ }
   | ">=" { GEQ }
   | ":=" { SET }
@@ -29,6 +30,9 @@ rule read =
   | "<" { ANGLELEFT }
   | ">" { ANGLERIGHT }
   | "," { COMMA }
+  | "||" { OR }
+  | "&&" { AND }
+  | "^" { XOR }
   | "empty?" { EMPTY }
   | "cont?" { ISCONT }
   | "[]" { NIL }

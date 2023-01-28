@@ -115,8 +115,13 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let t1, c1 = infer e1 ctx in
     let t2, c2 = infer e2 ctx in
     (match op with
-     | Add | Sub | Mult -> TInt, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt)
-     | Leq | Geq | Eq -> TBool, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt))
+     | Add | Sub | Mult | Xor -> TInt, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt)
+     | Leq | Geq | Eq -> TBool, c1 ++ c2 ++ (t1 == TInt) ++ (t2 == TInt)
+     | Or | And -> TBool, c1 ++ c2 ++ (t1 == TBool) ++ (t2 == TBool))
+  | Unop (op, e) ->
+    let t, c = infer e ctx in
+    (match op with
+     | Not -> TBool, c ++ (t == TBool))
   | Nil ->
     let t = genvar () in
     TList t, Constraint.empty

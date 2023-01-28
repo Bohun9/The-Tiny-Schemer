@@ -42,6 +42,10 @@ open Ast
 %token CDR
 %token ERROR
 %token ISCONT
+%token OR
+%token AND
+%token XOR
+%token NOT
 
 %nonassoc IN
 %nonassoc ELSE
@@ -70,7 +74,11 @@ expr:
     | CDR; e = expr { Cdr e }
     | CONS; e1 = expr; e2 = expr { Cons (e1, e2) }
     | FUN; x = ID; e = expr { Lam (x, e) }
+    | NOT; e = expr { Unop (Not, e) }
     | e1 = expr; e2 = expr { App (e1, e2) }
+    | e1 = expr; OR; e2 = expr { Binop (Or, e1, e2) }
+    | e1 = expr; AND; e2 = expr { Binop (And, e1, e2) }
+    | e1 = expr; XOR; e2 = expr { Binop (Xor, e1, e2) }
     | e1 = expr; GEQ; e2 = expr { Binop (Geq, e1, e2) }
     | e1 = expr; LEQ; e2 = expr { Binop (Leq, e1, e2) }
     | e1 = expr; TIMES; e2 = expr { Binop (Mult, e1, e2) } 
