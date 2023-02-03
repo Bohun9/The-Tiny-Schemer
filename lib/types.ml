@@ -39,27 +39,27 @@ end = struct
 
   let empty = []
 
-  let rec query (subst : t) (x : string) =
-    match subst with
-    | [] -> TVar x
-    | (y, t) :: rest -> if x = y then t else query rest x
+  let query (subst : t) (x : string) : ttype =
+    match List.assoc_opt x subst with
+    | Some y -> y
+    | None -> TVar x
   ;;
 
-  let apply (subst : t) (t : ttype) =
-    let rec applier (t : ttype) =
+  let apply (subst : t) (t : ttype) : ttype =
+    let rec app (t : ttype) : ttype =
       match t with
       | TInt -> TInt
       | TBool -> TBool
       | TUnit -> TUnit
       | TError -> TError
       | TVar x -> query subst x
-      | TList t -> TList (applier t)
-      | TPair (t1, t2) -> TPair (applier t1, applier t2)
-      | TFun (t1, t2) -> TFun (applier t1, applier t2)
-      | TRef t -> TRef (applier t)
-      | TCont t -> TCont (applier t)
+      | TList t -> TList (app t)
+      | TPair (t1, t2) -> TPair (app t1, app t2)
+      | TFun (t1, t2) -> TFun (app t1, app t2)
+      | TRef t -> TRef (app t)
+      | TCont t -> TCont (app t)
     in
-    applier t
+    app t
   ;;
 
   let ( $$ ) s1 s2 = List.fold_left (fun r (x, t) -> (x, apply s1 t) :: r) [] s2 @ s1

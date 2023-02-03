@@ -34,13 +34,12 @@ let assert = fun x (
 		fail ()
 ) in
 
-let a = choice (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 [])))))) in
-let b = choice (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 [])))))) in
-let c = choice (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 [])))))) in
+let a = choice (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 (cons 7 (cons 8 (cons 9 (cons 10 [])))))))))) in
+let b = choice (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 (cons 7 (cons 8 (cons 9 (cons 10 [])))))))))) in
+let c = choice (cons 1 (cons 2 (cons 3 (cons 4 (cons 4 (cons 6 (cons 7 (cons 8 (cons 9 (cons 10 [])))))))))) in
 
 (
- (assert (((a * a) + (b * b)) <= (c * c)));
- (assert (((a * a) + (b * b)) >= (c * c)));
+ (assert (((a * a) + (b * b)) == (c * c)));
  (assert (a >= b));
  (<a, <b, c>>)
 )

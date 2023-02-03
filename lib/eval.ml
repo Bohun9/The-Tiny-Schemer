@@ -21,7 +21,6 @@ exception PairSecondTypeError
 exception EmptyTypeError
 exception CarTypeError
 exception CdrTypeError
-exception ConsError
 exception ConsTypeError
 exception CarEmptyError
 exception CdrEmptyError
@@ -66,13 +65,14 @@ let evalbinop (op : binop) (v1 : value) (v2 : value) : value =
      | _ -> raise XorTypeError)
 ;;
 
-let evalunop (op : unop) (v : value) : value = 
+let evalunop (op : unop) (v : value) : value =
   match op with
   | Not ->
-      (match v with
-      | VBool true -> VBool false
-      | VBool false -> VBool true
-      | _ -> raise NotTypeError)
+    (match v with
+     | VBool true -> VBool false
+     | VBool false -> VBool true
+     | _ -> raise NotTypeError)
+;;
 
 let rec eval
   (e : expr)
@@ -86,22 +86,15 @@ let rec eval
   | Bool x -> k (VBool x, sto)
   | Unit -> k (VUnit, sto)
   | Error -> VError, sto
-  | Id x ->
-    (* (let _ = Printf.printf "%s %s\n" x (to_string (Environment.query env x)) in ()); *)
-    k (Environment.query env x, sto)
+  | Id x -> k (Environment.query env x, sto)
   | Lam (x, b) -> k (VClo (x, b, env), sto)
   | App (f, e) ->
     eval f env sto (fun (f, sto) ->
       eval e env sto (fun (v, sto) ->
-        (* (let _ = Printf.printf "f -- %s\n" (to_string f) in *)
-        (*  ()); *)
-        (* (let _ = Printf.printf "v -- %s\n" (to_string v) in *)
-        (*  ()); *)
         match f with
-        | VClo (x, b, clo_env) ->
-          eval b (clo_env ^^ (x, v)) sto (fun (v, sto) -> k (v, sto))
+        | VClo (x, b, clo_env) -> eval b (clo_env ^^ (x, v)) sto (fun x -> k x)
         | VCloRec (fn, x, b, clo_env) ->
-          eval b ((clo_env ^^ (x, v)) ^^ (fn, f)) sto (fun (v, sto) -> k (v, sto))
+          eval b ((clo_env ^^ (x, v)) ^^ (fn, f)) sto (fun x -> k x)
         | _ -> raise FunctionApplicationTypeError))
   | Pair (e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
@@ -117,24 +110,17 @@ let rec eval
       | VPair (_, v2) -> k (v2, sto)
       | _ -> raise PairSecondTypeError)
   | Let (x, e1, e2) ->
-    eval e1 env sto (fun (v1, sto) ->
-      eval e2 (env ^^ (x, v1)) sto (fun (v2, sto) -> k (v2, sto)))
+    eval e1 env sto (fun (v1, sto) -> eval e2 (env ^^ (x, v1)) sto (fun x -> k x))
   | If (e1, e2, e3) ->
     eval e1 env sto (fun (v, sto) ->
       match v with
-      | VBool true -> eval e2 env sto (fun (v, sto) -> k (v, sto))
-      | VBool false ->
-        eval e3 env sto (fun (v, sto) ->
-          (* (let _ = Printf.printf "IF FALSE: %s\n" (to_string v) in ()); *)
-          k (v, sto))
+      | VBool true -> eval e2 env sto (fun x -> k x)
+      | VBool false -> eval e3 env sto (fun x -> k x)
       | _ -> raise IfGuardTypeError)
   | Binop (op, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
       eval e2 env sto (fun (v2, sto) -> k (evalbinop op v1 v2, sto)))
-  | Unop (op, e) ->
-      eval e env sto (fun (v, sto) ->
-        k (evalunop op v, sto)
-      )
+  | Unop (op, e) -> eval e env sto (fun (v, sto) -> k (evalunop op v, sto))
   | Nil -> k (VNil, sto)
   | Empty e ->
     eval e env sto (fun (v, sto) ->
@@ -180,14 +166,13 @@ let rec eval
         match v1 with
         | VLoc loc -> k (VUnit, Store.set sto loc v2)
         | _ -> raise AssignmentTypeError))
-  | Begin (e1, e2) ->
-    eval e1 env sto (fun (_, sto) -> eval e2 env sto (fun (v2, sto) -> k (v2, sto)))
-  | Callcc (kn, e) -> eval e (env ^^ (kn, VCont k)) sto (fun (v, sto) -> k (v, sto))
+  | Begin (e1, e2) -> eval e1 env sto (fun (_, sto) -> eval e2 env sto (fun x -> k x))
+  | Callcc (kn, e) -> eval e (env ^^ (kn, VCont k)) sto (fun x -> k x)
   | Throw (k2, e) ->
     eval k2 env sto (fun (k2, sto) ->
-      eval e env sto (fun (v, sto) ->
+      eval e env sto (fun x ->
         match k2 with
-        | VCont k2 -> k2 (v, sto)
+        | VCont k2 -> k2 x
         | _ -> raise ContinuationTypeError))
   | IsCont e ->
     eval e env sto (fun (v, sto) ->

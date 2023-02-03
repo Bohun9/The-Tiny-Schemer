@@ -25,7 +25,7 @@ let fact_knot_val = VInt 3628800
 let pair_val = VInt 3
 let list_val = VInt 3
 let error_val = VError
-let pytha_val = VPair (VInt 4, VPair (VInt 3, VInt 5))
+let pytha_val = VPair (VInt 8, VPair (VInt 6, VInt 10))
 let exn_val = VPair (VInt 0, VInt 1)
 let poly_list_length_val = VInt 6
 

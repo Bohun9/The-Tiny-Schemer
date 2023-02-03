@@ -16,7 +16,7 @@ end = struct
   let ( == ) (t1 : ttype) (t2 : ttype) = [ t1, t2 ]
   let ( ++ ) (c1 : t list) (c2 : t list) = c2 @ c1
 
-  let apply cs subst =
+  let apply (cs : t list) (subst : Substitution.t) : t list =
     List.fold_left
       (fun cs (t1, t2) ->
         (Substitution.apply subst t1, Substitution.apply subst t2) :: cs)
