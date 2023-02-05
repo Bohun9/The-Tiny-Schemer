@@ -92,9 +92,9 @@ let rec eval
     eval f env sto (fun (f, sto) ->
       eval e env sto (fun (v, sto) ->
         match f with
-        | VClo (x, b, clo_env) -> eval b (clo_env ^^ (x, v)) sto (fun x -> k x)
+        | VClo (x, b, clo_env) -> eval b (clo_env ^^ (x, v)) sto k
         | VCloRec (fn, x, b, clo_env) ->
-          eval b ((clo_env ^^ (x, v)) ^^ (fn, f)) sto (fun x -> k x)
+          eval b ((clo_env ^^ (x, v)) ^^ (fn, f)) sto k
         | _ -> raise FunctionApplicationTypeError))
   | Pair (e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
@@ -110,12 +110,12 @@ let rec eval
       | VPair (_, v2) -> k (v2, sto)
       | _ -> raise PairSecondTypeError)
   | Let (x, e1, e2) ->
-    eval e1 env sto (fun (v1, sto) -> eval e2 (env ^^ (x, v1)) sto (fun x -> k x))
+    eval e1 env sto (fun (v1, sto) -> eval e2 (env ^^ (x, v1)) sto k)
   | If (e1, e2, e3) ->
     eval e1 env sto (fun (v, sto) ->
       match v with
-      | VBool true -> eval e2 env sto (fun x -> k x)
-      | VBool false -> eval e3 env sto (fun x -> k x)
+      | VBool true -> eval e2 env sto k
+      | VBool false -> eval e3 env sto k
       | _ -> raise IfGuardTypeError)
   | Binop (op, e1, e2) ->
     eval e1 env sto (fun (v1, sto) ->
@@ -166,8 +166,8 @@ let rec eval
         match v1 with
         | VLoc loc -> k (VUnit, Store.set sto loc v2)
         | _ -> raise AssignmentTypeError))
-  | Begin (e1, e2) -> eval e1 env sto (fun (_, sto) -> eval e2 env sto (fun x -> k x))
-  | Callcc (kn, e) -> eval e (env ^^ (kn, VCont k)) sto (fun x -> k x)
+  | Begin (e1, e2) -> eval e1 env sto (fun (_, sto) -> eval e2 env sto k)
+  | Callcc (kn, e) -> eval e (env ^^ (kn, VCont k)) sto k
   | Throw (k2, e) ->
     eval k2 env sto (fun (k2, sto) ->
       eval e env sto (fun x ->
