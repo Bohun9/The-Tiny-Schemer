@@ -16,4 +16,10 @@ but as they are more dynamic language construct (Scheme), I don't perform static
 
 - Interpreter is written in [continutation passing style](https://en.wikipedia.org/wiki/Continuation-passing_style).
 
-- Mutation involves passing "store" in interpreter, which holds mutable cells (no garbage collection :().
+#### Dependencies
+
+- ounit2 (available via opam)
+
+#### Running tests
+
+`$ dune build && dune runtest`
