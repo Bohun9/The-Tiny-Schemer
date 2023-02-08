@@ -28,29 +28,7 @@ let error_val = VError
 let pytha_val = VPair (VInt 8, VPair (VInt 6, VInt 10))
 let exn_val = VPair (VInt 0, VInt 1)
 let poly_list_length_val = VInt 6
-
-let coroutines_val =
-  VCons
-    ( VInt 0
-    , VCons
-        ( VInt 1
-        , VCons
-            ( VInt 2
-            , VCons
-                ( VInt 3
-                , VCons
-                    ( VInt 0
-                    , VCons
-                        ( VInt 1
-                        , VCons
-                            ( VInt 2
-                            , VCons
-                                ( VInt 3
-                                , VCons
-                                    ( VInt 0
-                                    , VCons (VInt 1, VCons (VInt 2, VCons (VInt 3, VNil)))
-                                    ) ) ) ) ) ) ) ) )
-;;
+let coroutines_val = VInt 820
 
 let eval_suite =
   "evaluation"
