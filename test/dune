@@ -20,5 +20,7 @@
        code/ycomb
        code/poly_list_length
        code/list_length
-       code/coroutines)
+       code/coroutines
+       code/letrec_corner
+       )
  )

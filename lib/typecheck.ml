@@ -145,8 +145,9 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
     let ft = genvar () in
     let xt = genvar () in
     let t1, c1 = infer b ((ctx ^^ (f, Forall ([], ft))) ^^ (x, Forall ([], xt))) in
+    let c1 = c1 ++ (ft == TFun (xt, t1)) in
     let t2, c2 = infer e (ctx ^^ (f, generalize ctx ft c1)) in
-    t2, c1 ++ c2 ++ (ft == TFun (xt, t1))
+    t2, c1 ++ c2
   | Ref x ->
     let t, c = infer x ctx in
     TRef t, c

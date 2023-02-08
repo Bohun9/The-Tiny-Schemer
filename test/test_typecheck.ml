@@ -72,6 +72,8 @@ let typeinfer_type =
 
 let list_length_type = TFun (TList (TVar "x"), TInt)
 
+let letrec_corner_type = TFun (TVar "x", TInt)
+
 let type_suite =
   "type inference"
   >::: [ type_make "1" "code/fib" fib_type
@@ -79,6 +81,7 @@ let type_suite =
        ; type_make "3" "code/typeinfer" typeinfer_type
        ; type_make_ex "4" "code/ycomb"
        ; type_make "5" "code/list_length" list_length_type
+       ; type_make "6" "code/letrec_corner" letrec_corner_type
        ]
 ;;
 
