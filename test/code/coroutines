@@ -58,8 +58,6 @@ let spawn = fun thunk (
 	)
 ) in
 
-let counter = ref 12 in
-
 let makethread = fun a (fun b (
 	let a = ref a in (
 	let rec spin x (
