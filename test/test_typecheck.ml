@@ -82,6 +82,7 @@ let type_suite =
        ; type_make_ex "4" "code/ycomb"
        ; type_make "5" "code/list_length" list_length_type
        ; type_make "6" "code/letrec_corner" letrec_corner_type
+       ; type_make_ex "7" "code/callcc"
        ]
 ;;
 

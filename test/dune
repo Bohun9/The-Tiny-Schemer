@@ -22,5 +22,5 @@
        code/list_length
        code/coroutines
        code/letrec_corner
-       )
+       code/callcc)
  )

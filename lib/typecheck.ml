@@ -166,7 +166,7 @@ let rec infer (e : Ast.expr) (ctx : TypeContext.t) : ttype * Unification.Constra
   | Callcc (k, b) ->
     let kt = genvar () in
     let t, c = infer b (ctx ^^ (k, Forall ([], TCont kt))) in
-    t, c
+    t, c ++ (kt == t)
   | Throw (k, x) ->
     let kt, c1 = infer k ctx in
     let xt, c2 = infer x ctx in
